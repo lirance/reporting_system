@@ -19,13 +19,13 @@ import java.util.List;
  * Data Stucture
  * data - title, generatedTime
  * - sheets
- *      -sheet1 - title (required)
- *              - headers
- *                   - name
- *                   - width
- *                   - type
- *              - dataRows
- *                   - List of objects/values
+ * -sheet1 - title (required)
+ * - headers
+ * - name
+ * - width
+ * - type
+ * - dataRows
+ * - List of objects/values
  */
 @Service
 public class ExcelGenerationServiceImpl implements ExcelGenerationService {
@@ -38,7 +38,7 @@ public class ExcelGenerationServiceImpl implements ExcelGenerationService {
             if (StringUtils.isEmpty(sheet.getTitle())) {
                 throw new RuntimeException("Excel Data Error: sheet name is missing");
             }
-            if(sheet.getHeaders() != null) {
+            if (sheet.getHeaders() != null) {
                 int columns = sheet.getHeaders().size();
                 for (List<Object> dataRow : sheet.getDataRows()) {
                     if (dataRow.size() != columns) {
@@ -50,7 +50,7 @@ public class ExcelGenerationServiceImpl implements ExcelGenerationService {
     }
 
     @Override
-    public File generateExcelReport(ExcelData data) throws IOException {
+    public File generateExcelReport(ExcelData data, String fileId) throws IOException {
         validateDate(data);
         XSSFWorkbook workbook = new XSSFWorkbook();
 
@@ -76,7 +76,7 @@ public class ExcelGenerationServiceImpl implements ExcelGenerationService {
                 ExcelDataHeader headerData = headersData.get(i);
                 Cell headerCell = header.createCell(i);
                 headerCell.setCellValue(headerData.getName());
-                if(headerData.getWidth() > 0) sheet.setColumnWidth(i, headerData.getWidth());
+                if (headerData.getWidth() > 0) sheet.setColumnWidth(i, headerData.getWidth());
                 headerCell.setCellValue(headerData.getName());
                 headerCell.setCellStyle(headerStyle);
             }
@@ -104,7 +104,7 @@ public class ExcelGenerationServiceImpl implements ExcelGenerationService {
 
         File currDir = new File(".");
         String path = currDir.getAbsolutePath();
-        String fileLocation = path.substring(0, path.length() - 1) + "temp.xlsx";  // TODO : file name cannot be hardcoded here
+        String fileLocation = path.substring(0, path.length() - 1) + fileId + ".xlsx";  // TODO : file name cannot be hardcoded here
 
         FileOutputStream outputStream = new FileOutputStream(fileLocation);
         workbook.write(outputStream);
@@ -114,6 +114,21 @@ public class ExcelGenerationServiceImpl implements ExcelGenerationService {
             e.printStackTrace();
         }
         return new File(fileLocation);
+    }
+
+    @Override
+    public File deleteFile(String fileId) throws IOException {
+        File currDir = new File(".");
+        String path = currDir.getAbsolutePath();
+        String fileLocation = path.substring(0, path.length() - 1) + fileId + ".xlsx";  // TODO : file name cannot be hardcoded here
+
+        File file = new File(fileLocation);
+        if (file.delete()) {
+            System.out.println(file.getName() + "file deleted!");
+        } else {
+            System.out.println("file Deleted Failed!");
+        }
+        return file;
     }
 
 }

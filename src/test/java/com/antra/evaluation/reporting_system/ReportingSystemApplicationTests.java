@@ -73,7 +73,7 @@ class ReportingSystemApplicationTests {
     public void testExcelGegeration() {
         File file = null;
         try {
-            file = reportService.generateExcelReport(data);
+            file = reportService.generateExcelReport(data,"temp");
         } catch (IOException e) {
             e.printStackTrace();
         }

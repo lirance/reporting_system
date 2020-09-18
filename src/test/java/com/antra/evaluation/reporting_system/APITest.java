@@ -1,6 +1,7 @@
 package com.antra.evaluation.reporting_system;
 
 import com.antra.evaluation.reporting_system.endpoint.ExcelGenerationController;
+import com.antra.evaluation.reporting_system.service.ExcelGenerationService;
 import com.antra.evaluation.reporting_system.service.ExcelService;
 import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
@@ -22,10 +23,13 @@ public class APITest {
     @Mock
     ExcelService excelService;
 
+    @Mock
+    ExcelGenerationService excelGenerationService;
+
     @BeforeEach
     public void configMock() {
         MockitoAnnotations.initMocks(this);
-        RestAssuredMockMvc.standaloneSetup(new ExcelGenerationController(excelService));
+        RestAssuredMockMvc.standaloneSetup(new ExcelGenerationController(excelService, excelGenerationService));
     }
 
     @Test
@@ -38,7 +42,7 @@ public class APITest {
 
     @Test
     public void testListFiles() throws FileNotFoundException {
-       // Mockito.when(excelService.getExcelBodyById(anyString())).thenReturn(new FileInputStream("temp.xlsx"));
+        // Mockito.when(excelService.getExcelBodyById(anyString())).thenReturn(new FileInputStream("temp.xlsx"));
         given().accept("application/json").get("/excel").peek().
                 then().assertThat()
                 .statusCode(200);
