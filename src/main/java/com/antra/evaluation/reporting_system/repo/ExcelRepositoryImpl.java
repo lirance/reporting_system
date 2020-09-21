@@ -1,7 +1,6 @@
 package com.antra.evaluation.reporting_system.repo;
 
 import com.antra.evaluation.reporting_system.pojo.report.ExcelFile;
-import fr.opensagres.xdocreport.itext.extension.ExtendedAnchor;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -28,7 +27,11 @@ public class ExcelRepositoryImpl implements ExcelRepository {
 
     @Override
     public ExcelFile deleteFile(String id) {
-        return excelData.remove(id);
+        if (excelData.containsKey(id)) {
+            return excelData.remove(id);
+        } else {
+            return null;
+        }
     }
 
     @Override

@@ -12,7 +12,6 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -104,8 +103,7 @@ public class ExcelGenerationServiceImpl implements ExcelGenerationService {
 
         File currDir = new File(".");
         String path = currDir.getAbsolutePath();
-        String fileLocation = path.substring(0, path.length() - 1) + fileId + ".xlsx";  // TODO : file name cannot be hardcoded here
-
+        String fileLocation = path.substring(0, path.length() - 1) + fileId + ".xlsx";
         FileOutputStream outputStream = new FileOutputStream(fileLocation);
         workbook.write(outputStream);
         try {
@@ -117,18 +115,17 @@ public class ExcelGenerationServiceImpl implements ExcelGenerationService {
     }
 
     @Override
-    public File deleteFile(String fileId) throws IOException {
+    public File deleteFile(String fileId) throws RuntimeException {
         File currDir = new File(".");
         String path = currDir.getAbsolutePath();
-        String fileLocation = path.substring(0, path.length() - 1) + fileId + ".xlsx";  // TODO : file name cannot be hardcoded here
-
+        String fileLocation = path.substring(0, path.length() - 1) + fileId + ".xlsx";
         File file = new File(fileLocation);
+
         if (file.delete()) {
-            System.out.println(file.getName() + "file deleted!");
+            return file;
         } else {
-            System.out.println("file Deleted Failed!");
+            throw new RuntimeException("File Delete Error: File Not Found or File Delete Failed");
         }
-        return file;
     }
 
 }

@@ -1,5 +1,6 @@
 package com.antra.evaluation.reporting_system.pojo.api;
 
+
 import java.util.List;
 
 public class ExcelRequest {
@@ -7,7 +8,6 @@ public class ExcelRequest {
     private String description;
     private List<List<Object>> data;
     private String submitter;
-    private String splitBy;
 
     public String getDescription() {
         return description;
@@ -41,11 +41,5 @@ public class ExcelRequest {
         this.submitter = submitter;
     }
 
-    public String getSplitBy() {
-        return splitBy;
-    }
 
-    public void setSplitBy(String splitBy) {
-        this.splitBy = splitBy;
-    }
 }
