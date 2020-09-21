@@ -1,5 +1,6 @@
 package com.antra.evaluation.reporting_system.endpoint;
 
+import com.antra.evaluation.reporting_system.pojo.api.ErrorResponse;
 import com.antra.evaluation.reporting_system.pojo.api.ExcelRequest;
 import com.antra.evaluation.reporting_system.pojo.api.ExcelResponse;
 import com.antra.evaluation.reporting_system.pojo.api.MultiSheetExcelRequest;
@@ -12,10 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.FileCopyUtils;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -35,35 +37,27 @@ public class ExcelGenerationController {
 
     @PostMapping("/excel")
     @ApiOperation("Generate Excel")
-    public ResponseEntity<ExcelResponse> createExcel(@RequestBody @Validated ExcelRequest request) {
+    public ResponseEntity<ExcelResponse> createExcel(@RequestBody @Valid ExcelRequest request) throws IOException {
         ExcelResponse response = new ExcelResponse();
-        try {
-            ExcelFile file = excelService.generateExcelDataFromRequest(request);
-            response.generateResponseFromFile(file);
-            response.setMessage("Generate Success");
-            log.info("File generate success, file id: " + file.getFileId());
-        } catch (RuntimeException | IOException e) {
-            log.warn("input format not correct", e);
-            response.setMessage("File generated failed, check input format");
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
+
+        ExcelFile file = excelService.generateExcelDataFromRequest(request);
+        response.generateResponseFromFile(file);
+        response.setMessage("Generate Success");
+        log.info("File generate success, file id: " + file.getFileId());
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/excel/auto")
     @ApiOperation("Generate Multi-Sheet Excel Using Split field")
-    public ResponseEntity<ExcelResponse> createMultiSheetExcel(@RequestBody @Validated MultiSheetExcelRequest request) {
+    public ResponseEntity<ExcelResponse> createMultiSheetExcel(@RequestBody @Valid MultiSheetExcelRequest request) throws IOException {
         ExcelResponse response = new ExcelResponse();
-        try {
-            ExcelFile file = excelService.generateMultiSheetExcelDataFromRequest(request);
-            response.generateResponseFromFile(file);
-            response.setMessage("Generate Success");
-            log.info("File generate and split success, file id: " + file.getFileId());
-        } catch (RuntimeException | IOException e) {
-            log.warn("input format not correct", e);
-            response.setMessage("File generated failed, check input format");
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
+
+        ExcelFile file = excelService.generateMultiSheetExcelDataFromRequest(request);
+        response.generateResponseFromFile(file);
+        response.setMessage("Generate Success");
+        log.info("File generate and split success, file id: " + file.getFileId());
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -92,47 +86,30 @@ public class ExcelGenerationController {
             fis.close();
         } else {
             log.warn("File not Found with id: " + id);
-            response.sendError(400, "File not Found with id : " + id);
+            throw new FileNotFoundException("File not Found with id : " + id);
         }
 
     }
 
     @DeleteMapping("/excel/{id}")
-    public ResponseEntity<ExcelResponse> deleteExcel(@PathVariable String id) {
+    public ResponseEntity<ExcelResponse> deleteExcel(@PathVariable String id) throws FileNotFoundException {
         var response = new ExcelResponse();
-        try {
-            ExcelFile file = excelService.deleteExcelById(id);
-            response.generateResponseFromFile(file);
-            response.setMessage("Delete Success");
-            log.info("File delete success, fileId :" + file.getFileId());
-        } catch (RuntimeException e) {
-            response.setMessage("File Does not Exist with id : " + id);
-            log.warn("file does not exist", e);
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
+        ExcelFile file = excelService.deleteExcelById(id);
+        response.generateResponseFromFile(file);
+        response.setMessage("Delete Success");
+        log.info("File delete success, fileId :" + file.getFileId());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/excel/batch")
     @ApiOperation("Generate Multiple Excel At Once ")
-    public ResponseEntity<List<ExcelResponse>> createExcels(@RequestBody @Validated List<MultiSheetExcelRequest> request) {
+    public ResponseEntity<List<ExcelResponse>> createExcels(@RequestBody @Valid List<MultiSheetExcelRequest> request) {
         List<ExcelResponse> response = new ArrayList<>();
-// if one bad request, do not generate any file
-//        try {
-//            List<ExcelFile> files = excelService.generateBatchExcelDataFromRequest(request);
-//            for (ExcelFile file:files){
-//                ExcelResponse resp = new ExcelResponse();
-//                resp.generateResponseFromFile(file);
-//                resp.setMessage("File Generate Success");
-//                log.info("File generate success, fileId :" + file.getFileId());
-//            }
-//        } catch (IOException e) {
-//            log.warn("Something wrong with the input format");
-//            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-//        }
-        // generate all files that is correct, and return the result.
         for (MultiSheetExcelRequest req : request) {
             ExcelResponse resp = new ExcelResponse();
+            // instead of throw the Exception and let exception handler to handle it,
+            // i use try catch here because I want the batch generate api to generate as many as possible
+            //even if some of the request cannot be generate.
             try {
                 ExcelFile file;
                 if (req.getSplitBy() != null) {
@@ -143,15 +120,46 @@ public class ExcelGenerationController {
                 resp.generateResponseFromFile(file);
                 resp.setMessage("File Generate Success");
                 log.info("File generate success, fileId :" + file.getFileId());
-            } catch (IOException e) {
-                log.error("file error", e);
-            } catch (RuntimeException e) {
-                resp.setMessage("File cannot be generated");
+            } catch (RuntimeException | IOException e) {
+                resp.setMessage("File cannot be generated,check your input");
                 log.info("File generated failed");
             } finally {
                 response.add(resp);
             }
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> exceptionHandler(Exception ex) {
+        ErrorResponse error = new ErrorResponse();
+        error.setErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        error.setMessage(ex.getMessage());
+        log.error("Controller Error", ex);
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(FileNotFoundException.class)
+    public ResponseEntity<ErrorResponse> exceptionHandlerFileNotFound(Exception ex) {
+        ErrorResponse error = new ErrorResponse();
+        error.setErrorCode(HttpStatus.NOT_FOUND.value());
+        error.setMessage(ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> exceptionHandlerFileCannotGenerate(Exception ex) {
+        ErrorResponse error = new ErrorResponse();
+        error.setErrorCode(HttpStatus.NOT_FOUND.value());
+        error.setMessage(ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<ErrorResponse> exceptionHandlerFileError(Exception ex) {
+        ErrorResponse error = new ErrorResponse();
+        error.setErrorCode(HttpStatus.NOT_FOUND.value());
+        error.setMessage(ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.EXPECTATION_FAILED);
     }
 }

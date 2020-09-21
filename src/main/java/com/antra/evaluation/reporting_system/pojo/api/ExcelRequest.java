@@ -1,12 +1,19 @@
 package com.antra.evaluation.reporting_system.pojo.api;
 
 
+import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
 public class ExcelRequest {
+
+    @NotEmpty(message = "headers are mandatory")
     private List<String> headers;
+
     private String description;
+
+    @NotEmpty(message = "data are mandatory")
     private List<List<Object>> data;
+
     private String submitter;
 
     public String getDescription() {

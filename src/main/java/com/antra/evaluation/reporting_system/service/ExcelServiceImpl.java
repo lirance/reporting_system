@@ -23,33 +23,6 @@ public class ExcelServiceImpl implements ExcelService {
     @Autowired
     ExcelGenerationService excelGenerationService;
 
-
-    private void validateDate(ExcelRequest request) {
-
-        if (request == null) {
-            throw new RuntimeException("Request Error: No Data Specified");
-        }
-
-        if (request.getData() == null || request.getData().isEmpty()) {
-            throw new RuntimeException("Request Error: No Data to generate");
-        }
-
-        if (request.getHeaders() == null || request.getHeaders().isEmpty()) {
-            throw new RuntimeException("Request Error: No headers to generate");
-        }
-
-    }
-
-    private void validateSplitData(MultiSheetExcelRequest request) {
-        validateDate(request);
-        String splitBy = request.getSplitBy();
-        if (splitBy == null) {
-            throw new RuntimeException("Split Excel Data Error: No split column specified");
-        } else if (!request.getHeaders().contains(splitBy)) {
-            throw new RuntimeException("Split Excel Data Error: split column doesn't exist");
-        }
-    }
-
     @Override
     public InputStream getExcelBodyById(String id) throws FileNotFoundException {
 
@@ -65,7 +38,6 @@ public class ExcelServiceImpl implements ExcelService {
 
     @Override
     public ExcelFile generateExcelDataFromRequest(ExcelRequest request) throws IOException {
-        validateDate(request);
         var sheets = new ArrayList<ExcelDataSheet>();
         List<ExcelDataHeader> headers = buildSheetHeaders(request);
 
@@ -80,7 +52,6 @@ public class ExcelServiceImpl implements ExcelService {
 
     @Override
     public ExcelFile generateMultiSheetExcelDataFromRequest(MultiSheetExcelRequest request) throws IOException, RuntimeException {
-        validateSplitData(request);
         var sheets = new ArrayList<ExcelDataSheet>();
         List<ExcelDataHeader> headers = buildSheetHeaders(request);
 
@@ -127,17 +98,13 @@ public class ExcelServiceImpl implements ExcelService {
     }
 
     @Override
-    public ExcelFile deleteExcelById(String id) throws RuntimeException {
+    public ExcelFile deleteExcelById(String id) throws FileNotFoundException {
         excelGenerationService.deleteFile(id);
         return excelRepository.deleteFile(id);
     }
 
     @Override
     public List<ExcelFile> generateBatchExcelDataFromRequest(List<MultiSheetExcelRequest> request) throws IOException {
-
-        for (MultiSheetExcelRequest req : request) {
-            validateSplitData(req);
-        }
         List<ExcelFile> files = new ArrayList<>();
         for (MultiSheetExcelRequest req : request) {
             ExcelFile f = generateMultiSheetExcelDataFromRequest(req);

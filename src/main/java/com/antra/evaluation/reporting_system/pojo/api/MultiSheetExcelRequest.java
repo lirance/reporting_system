@@ -1,7 +1,10 @@
 package com.antra.evaluation.reporting_system.pojo.api;
 
-public class MultiSheetExcelRequest extends ExcelRequest{
+import javax.validation.constraints.NotEmpty;
 
+public class MultiSheetExcelRequest extends ExcelRequest {
+
+    @NotEmpty(message = "SplitBy is mandatory")
     private String splitBy;
 
     public String getSplitBy() {
