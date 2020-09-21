@@ -47,6 +47,11 @@ To evaluate the candidates':
 ```json
 {"headers":["Name","Age","Class"], "data":[["Teresa","5","A"],["Daniel","1","B"]], "splitBy":"Class"}
 ```
+* For batch generate api _- fields may vary depending on your design._
+```json
+[{"headers":["Name","Age","Class"], "data":[["Teresa","5","A"],["Daniel","1","B"]], "splitBy":"Class"},
+{"headers":["Name","Age","Grades"], "data":[["Teresa","5","90"],["Daniel","1","44"]], "splitBy":"Age"}]
+```
  * See _ExcelGenerationController_ for Detailed explaination of each API.
 
 ####Data storage
@@ -62,5 +67,5 @@ You can use [mathData.json](mathData.json) and [mathData-withSplitBy.json](mathD
 
 
 ###Optional - Challenge your self
-* Add batch generation api that can accept multiple data as the same time and generate multiple excel at once.
+* Add batch generation api that can accept multiple data as the same time and generate multiple excel at once.(Finished)
 * Add batch downloading api that allow user to download multiple files in one request. Downloaded File should be in zip format.
