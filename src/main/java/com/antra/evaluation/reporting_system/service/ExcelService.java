@@ -20,5 +20,4 @@ public interface ExcelService {
 
     ExcelFile deleteExcelById(String id) throws FileNotFoundException;
 
-    List<ExcelFile> generateBatchExcelDataFromRequest(List<MultiSheetExcelRequest> request) throws IOException;
 }

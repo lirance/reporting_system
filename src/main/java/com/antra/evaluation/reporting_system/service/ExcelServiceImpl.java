@@ -103,16 +103,6 @@ public class ExcelServiceImpl implements ExcelService {
         return excelRepository.deleteFile(id);
     }
 
-    @Override
-    public List<ExcelFile> generateBatchExcelDataFromRequest(List<MultiSheetExcelRequest> request) throws IOException {
-        List<ExcelFile> files = new ArrayList<>();
-        for (MultiSheetExcelRequest req : request) {
-            ExcelFile f = generateMultiSheetExcelDataFromRequest(req);
-            files.add(f);
-        }
-        return files;
-    }
-
     private List<ExcelDataHeader> buildSheetHeaders(ExcelRequest request) {
         List<ExcelDataHeader> headers = new ArrayList<>();
         for (String h : request.getHeaders()) {
